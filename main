@@ -20,29 +20,30 @@ rm(list = ls())
   library(tibble)
   library(caret)
   library(ggRandomForests)
-  source("fun/CoxBoost.R");source("fun/Enet.R");source("fun/GBM.R");source("fun/plsRcox.R")
-  source("fun/RSF.R");source("fun/StepCox.R");source("fun/superPC.R");source("fun/Survivalsvm.R")
-  
-  suppressWarnings(suppressMessages(future::plan("multiprocess",workers = 5)))
+  source("CoxBoost.R")
+  source("Enet.R")
+  source("GBM.R")
+  source("plsRcox.R")
+  source("RSF.R")
+  source("StepCox.R")
+  source("superPC.R")
+  source("Survivalsvm.R")
 }
 ##################################
 #### 准备工作 ####
 ##################################
 {
-  setwd("E:\\CA\\machine learning\\circle")
+  setwd("")
   
   result <- data.frame()
-  #读取数据
-  data <- read.delim("45genes.txt")
+  data <- read.delim("17genes.txt")
   rownames(data)=data[,1]
   data=data[,-1]
-  
-  #划分训练集和测试集
-  size <- createDataPartition(data$OS.time,p=0.7,list = F)  # 随机选择70%的数据作为Train data
+  size <- createDataPartition(data$OS.time,p=0.7,list = F) 
   est_dd <- data[size,]
   val_dd_list <- data[-size,]
   
-  rf_nodesize <- 15
+  rf_nodesize <- 9
   seed <- 2022
   set.seed(seed)
 }
@@ -60,7 +61,6 @@ for (i in c(seq(1,8,1))) {
       ll <- firstfun(est_dd,val_dd_list,dirnames[j])
       fit <- ll[1];RS <- unlist(ll[2])
       est_dd2 <- as.data.frame(ll[3]);val_dd_list2 <- as.data.frame(ll[4])
-      ############## 第二层算法########################
       for (k in c(seq(1,8,1))) {
         # Enet
         if(k==2){ 
@@ -73,7 +73,6 @@ for (i in c(seq(1,8,1))) {
             aa=coxph(Surv(OS.time,OS)~RS,rs)
             cindex=as.numeric(summary(aa)$concordance[1])
             cc <- data.frame(cindex)%>%rownames_to_column('ID')
-            #模型结果
             cc$Model <- paste0(names[i],'(',dirnames[j],')','+',names[k],'(alpha=',alphalist[m],')')
             result <- rbind(result,cc)
           }
@@ -88,7 +87,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'(',dirnames[j],')','+',names[k])
           result <- rbind(result,cc)
         }
@@ -102,7 +100,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'(',dirnames[j],')','+',names[k])
           result <- rbind(result,cc)
         }
@@ -112,7 +109,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'(',dirnames[j],')')
           result <- rbind(result,cc)
         }
@@ -126,7 +122,6 @@ for (i in c(seq(1,8,1))) {
       ll <- firstfun(est_dd,val_dd_list,alphalist[j])
       fit <- ll[1];RS <- unlist(ll[2])
       est_dd2 <- as.data.frame(ll[3]);val_dd_list2 <- as.data.frame(ll[4])
-      ############### 第二层算法##################
       for (k in c(seq(1,8,1))) {
         # StepCox
         if(k==1){ 
@@ -139,7 +134,6 @@ for (i in c(seq(1,8,1))) {
             aa=coxph(Surv(OS.time,OS)~RS,rs)
             cindex=as.numeric(summary(aa)$concordance[1])
             cc <- data.frame(cindex)%>%rownames_to_column('ID')
-            #模型结果
             cc$Model <- paste0(names[i],'(alpha=',alphalist[j],')','+',names[k],'(',dirnames[m],')')
             result <- rbind(result,cc)
           }
@@ -154,7 +148,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'(alpha=',alphalist[j],')','+',names[k])
           result <- rbind(result,cc)
         }
@@ -168,7 +161,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'(alpha=',alphalist[j],')','+',names[k])
           result <- rbind(result,cc)
         }
@@ -178,7 +170,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'(alpha=',alphalist[j],')')
           result <- rbind(result,cc)
         }
@@ -191,7 +182,6 @@ for (i in c(seq(1,8,1))) {
     ll <- firstfun(est_dd,val_dd_list)
     fit <- ll[1];RS <- unlist(ll[2])
     est_dd2 <- as.data.frame(ll[3]);val_dd_list2 <- as.data.frame(ll[4])
-    ##########第二层算法#########
     for (k in c(seq(1,8,1))) {
       # StepCox
       if(k==1){ 
@@ -204,7 +194,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'+',names[k],'(',dirnames[m],')')
           result <- rbind(result,cc)
         }
@@ -220,7 +209,6 @@ for (i in c(seq(1,8,1))) {
           aa=coxph(Surv(OS.time,OS)~RS,rs)
           cindex=as.numeric(summary(aa)$concordance[1])
           cc <- data.frame(cindex)%>%rownames_to_column('ID')
-          #模型结果
           cc$Model <- paste0(names[i],'+',names[k],'(alpha=',alphalist[m],')')
           result <- rbind(result,cc)
         }
@@ -235,7 +223,6 @@ for (i in c(seq(1,8,1))) {
         aa=coxph(Surv(OS.time,OS)~RS,rs)
         cindex=as.numeric(summary(aa)$concordance[1])
         cc <- data.frame(cindex)%>%rownames_to_column('ID')
-        #模型结果
         cc$Model <- paste0(names[i],'+',names[k])
         result <- rbind(result,cc)
       }
@@ -244,7 +231,6 @@ for (i in c(seq(1,8,1))) {
         aa=coxph(Surv(OS.time,OS)~RS,rs)
         cindex=as.numeric(summary(aa)$concordance[1])
         cc <- data.frame(cindex)%>%rownames_to_column('ID')
-        #模型结果
         cc$Model <- paste0(names[i])
         result <- rbind(result,cc)
       }
@@ -260,7 +246,6 @@ for (i in c(seq(1,8,1))) {
     aa=coxph(Surv(OS.time,OS)~RS,rs)
     cindex=as.numeric(summary(aa)$concordance[1])
     cc <- data.frame(cindex)%>%rownames_to_column('ID')
-    #模型结果
     cc$Model <- paste0(names[i])
     result <- rbind(result,cc)
   }
